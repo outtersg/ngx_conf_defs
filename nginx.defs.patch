@@ -19,3 +19,40 @@ diff -r 8bb356ca5a12 -r cac499a2b296 src/core/ngx_conf_file.c
      if (ngx_conf_full_name(cf->cycle, &file, 1) != NGX_OK) {
          return NGX_CONF_ERROR;
      }
+diff -r cac499a2b296 -r ca9d5059523d src/http/ngx_http_script.c
+--- a/src/http/ngx_http_script.c	Mon Oct 28 07:25:26 2019 +0100
++++ b/src/http/ngx_http_script.c	Mon Oct 28 07:28:26 2019 +0100
+@@ -8,6 +8,7 @@
+ #include <ngx_config.h>
+ #include <ngx_core.h>
+ #include <ngx_http.h>
++#include <ngx_conf_def.h>
+ 
+ 
+ static ngx_int_t ngx_http_script_init_arrays(ngx_http_script_compile_t *sc);
+@@ -145,6 +146,14 @@
+ 
+     v = ccv->value;
+ 
++    if (ccv->compile_defs) {
++        /* Compile definitions before looking for variables, so that a
++         * definition's dereference can contain a variable */
++        if (ngx_conf_complex_value(ccv->cf, v) != NGX_OK) {
++            return NGX_ERROR;
++        }
++    }
++
+     nv = 0;
+     nc = 0;
+ 
+diff -r cac499a2b296 -r ca9d5059523d src/http/ngx_http_script.h
+--- a/src/http/ngx_http_script.h	Mon Oct 28 07:25:26 2019 +0100
++++ b/src/http/ngx_http_script.h	Mon Oct 28 07:28:26 2019 +0100
+@@ -83,6 +83,7 @@
+     unsigned                    zero:1;
+     unsigned                    conf_prefix:1;
+     unsigned                    root_prefix:1;
++    unsigned                    compile_defs:1;
+ } ngx_http_compile_complex_value_t;
+ 
+ 
