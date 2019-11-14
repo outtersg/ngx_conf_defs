@@ -11,8 +11,18 @@ ngx_module_deps="$ngx_addon_dir/ngx_conf_def.h"
 
 patchcore()
 {
-	local p="nginx.defs.patch"
-	patch -p1 < "$ngx_addon_dir/$p" || exit 1
+	local patches= p
+	
+	p="complex_value_in_include"
+	patches="$patches $p"
+	
+	p="complex_value_in_http_complex_value"
+	patches="$patches $p"
+	
+	for p in $patches
+	do
+		patch -p1 < "$ngx_addon_dir/patches/$p.patch" || exit 1
+	done
 }
 
 patchcore

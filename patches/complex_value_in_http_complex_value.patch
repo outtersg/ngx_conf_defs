@@ -1,24 +1,3 @@
-diff -r 8bb356ca5a12 -r cac499a2b296 src/core/ngx_conf_file.c
---- a/src/core/ngx_conf_file.c	Mon Oct 28 07:24:17 2019 +0100
-+++ b/src/core/ngx_conf_file.c	Mon Oct 28 07:25:26 2019 +0100
-@@ -7,6 +7,7 @@
- 
- #include <ngx_config.h>
- #include <ngx_core.h>
-+#include <ngx_conf_def.h>
- 
- #define NGX_CONF_BUFFER  4096
- 
-@@ -830,6 +831,9 @@
- 
-     ngx_log_debug1(NGX_LOG_DEBUG_CORE, cf->log, 0, "include %s", file.data);
- 
-+    if (ngx_conf_complex_value(cf, &file) != NGX_OK) {
-+        return NGX_CONF_ERROR;
-+    }
-     if (ngx_conf_full_name(cf->cycle, &file, 1) != NGX_OK) {
-         return NGX_CONF_ERROR;
-     }
 diff -r cac499a2b296 -r ca9d5059523d src/http/ngx_http_script.c
 --- a/src/http/ngx_http_script.c	Mon Oct 28 07:25:26 2019 +0100
 +++ b/src/http/ngx_http_script.c	Mon Oct 28 07:28:26 2019 +0100
