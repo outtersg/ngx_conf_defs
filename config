@@ -1,30 +1,13 @@
 #!/bin/sh
 
-# Mostly inspired from https://github.com/yaoweibin/nginx_upstream_check_module
+ngx_addon_name=ngx_conf_script
 
-ngx_feature="ngx_conf_defs"
-ngx_feature_name=
-ngx_feature_incs=
-ngx_feature_path="$ngx_addon_dir"
-ngx_feature_deps="$ngx_addon_dir/ngx_conf_def.h"
-ngx_feature_src="$ngx_addon_dir/ngx_conf_def.c"
-ngx_feature_run=no
-ngx_feature_test="int a;"
-. auto/feature
-
-if [ $ngx_found = yes ]; then
-	have=NGX_CONF_DEFS . auto/have
-	CORE_INCS="$CORE_INCS $ngx_feature_path"
-	ngx_addon_name=ngx_conf_defs
-	MISC_MODULES="$MISC_MODULES ngx_conf_defs"
-	NGX_ADDON_DEPS="$NGX_ADDON_DEPS $ngx_feature_deps"
-	NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_feature_src"
-else
-	cat << END
-$0: error: ngx_conf_defs cannot be applied.
-END
-	exit 1
-fi
+ngx_module_name=ngx_conf_script_module
+ngx_module_type=CORE
+ngx_module_srcs="$ngx_addon_dir/ngx_conf_def.c $ngx_addon_dir/ngx_conf_script_module.c"
+ngx_module_incs="$ngx_addon_dir"
+ngx_module_deps="$ngx_addon_dir/ngx_conf_def.h"
+. auto/module
 
 patchcore()
 {
