@@ -19,6 +19,9 @@ patchcore()
 	p="complex_value_in_http_complex_value"
 	patches="$patches $p"
 	
+	p="delim_init"
+	patches="$patches $p"
+	
 	for p in $patches
 	do
 		patch -p1 < "$ngx_addon_dir/patches/$p.patch" || exit 1

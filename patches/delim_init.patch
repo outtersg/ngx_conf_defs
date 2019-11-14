@@ -1,0 +1,30 @@
+diff -ruw a/src/core/ngx_conf_file.c b/src/core/ngx_conf_file.c
+--- a/src/core/ngx_conf_file.c	2019-11-14 00:06:05.778212000 +0100
++++ b/src/core/ngx_conf_file.c	2019-11-15 00:37:16.825954000 +0100
+@@ -189,6 +189,7 @@
+ 
+         prev = cf->conf_file;
+ 
++        conf_file.script_delim = cf->conf_file ? cf->conf_file->script_delim : NULL;
+         cf->conf_file = &conf_file;
+ 
+         if (ngx_fd_info(fd, &cf->conf_file->file.info) == NGX_FILE_ERROR) {
+diff -ruw a/src/core/ngx_conf_file.h b/src/core/ngx_conf_file.h
+--- a/src/core/ngx_conf_file.h	2019-09-24 17:08:48.000000000 +0200
++++ a/src/core/ngx_conf_file.h	2019-11-14 20:31:02.731052000 +0100
+@@ -11,6 +11,7 @@
+ 
+ #include <ngx_config.h>
+ #include <ngx_core.h>
++#include <ngx_conf_def.h>
+ 
+ 
+ /*
+@@ -100,6 +101,7 @@
+     ngx_buf_t            *buffer;
+     ngx_buf_t            *dump;
+     ngx_uint_t            line;
++    ngx_conf_script_delim_t *script_delim;
+ } ngx_conf_file_t;
+ 
+ 
