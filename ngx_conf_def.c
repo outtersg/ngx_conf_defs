@@ -254,7 +254,7 @@ ngx_conf_ccv_run(ngx_conf_ccv_t *ccv)
     	}
     }
 
-    ptr = ngx_pnalloc(ccv->cf->pool, len);
+    ptr = ngx_pnalloc(ccv->cf->pool, len + 1);
     if (ptr == NULL) {
         return NGX_ERROR;
     }
@@ -272,6 +272,8 @@ ngx_conf_ccv_run(ngx_conf_ccv_t *ccv)
     		break;
     	}
     }
+
+    ccv->value->data[ccv->value->len] = 0;
 
     return NGX_OK;
 }
