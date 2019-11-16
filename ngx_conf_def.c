@@ -10,8 +10,6 @@
 #include <ngx_conf_def.h>
 
 
-#define NGX_CONF_SCRIPT_DELIM_LEN 2
-
 #define NGX_CONF_TYPE_TEXT   0
 #define NGX_CONF_TYPE_EXPR   1
 
@@ -39,13 +37,28 @@ ngx_conf_complex_value(ngx_conf_t *cf, ngx_str_t *string)
 {
     ngx_uint_t      i, nv;
     ngx_conf_ccv_t  ccv;
+    u_char         *delim_ptr;
+    u_char         *delim_end;
+
+    if (!cf->conf_file->script_delim) {
+        return NGX_OK;
+    }
 
     nv = 0;
 
+    delim_ptr = cf->conf_file->script_delim->open.data;
+    delim_end = &delim_ptr[cf->conf_file->script_delim->open.len];
     for (i = 0; i < string->len - 1; ++i) {
-        if (string->data[i] == '{' && string->data[i + 1] == '{') {
-    		++nv;
-    	}
+        if (string->data[i] == *delim_ptr) {
+            do {
+                if (++delim_ptr == delim_end) {
+                    ++nv;
+                    break;
+                }
+                ++i;
+            } while (string->data[i] == *delim_ptr);
+            delim_ptr = cf->conf_file->script_delim->open.data;
+        }
     }
 
     if (nv == 0) {
@@ -110,10 +123,44 @@ ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv)
 }
 
 
+ngx_uint_t
+ngx_conf_to_past_delim(ngx_str_t *string, ngx_uint_t *pos, ngx_str_t * delim)
+{
+    ngx_uint_t      i = *pos;
+    u_char         *delim_pos = delim->data;
+    ngx_uint_t       delim_remaining;
+
+    while (i < string->len) {
+        if (string->data[i] == *delim_pos) {
+            *pos = i;
+            for (++i,
+                delim_remaining = delim->len - 1;
+                i < string->len;
+                ++i, --delim_remaining, ++delim_pos)
+            {
+                if (delim_remaining == 0) {
+                    return i;
+                }
+                if (string->data[i] != *delim_pos) {
+                    break;
+                }
+            }
+        } else {
+            ++i;
+        }
+    }
+
+    *pos = i;
+
+    return i;
+}
+
+
 int
 ngx_conf_ccv_compile(ngx_conf_ccv_t *ccv)
 {
-    ngx_uint_t      i, current_part_start, current_part_end;
+    ngx_uint_t      i, current_part_start, current_part_end, next_part_start;
+    ngx_uint_t      prev_part_end;
     ngx_uint_t      current_part_type;
 
     ccv->parts.nelts          = 0;
@@ -126,68 +173,48 @@ ngx_conf_ccv_compile(ngx_conf_ccv_t *ccv)
     	switch (current_part_type) {
     	
     	case NGX_CONF_TYPE_TEXT:
-    	
-    		for (i = current_part_start;
-    			i < ccv->value->len
-    			&& (ccv->value->data[i] != '{' || ccv->value->data[i + 1] != '{');
-    			/* void */ )
-    		{
-    			++i;
-    		}
+
+            current_part_end = current_part_start;
+            next_part_start = ngx_conf_to_past_delim(ccv->value,
+                &current_part_end, &ccv->cf->conf_file->script_delim->open);
     		
-    		if (i > current_part_start) {
+            if (current_part_end > current_part_start) {
     			((ngx_str_t *) ccv->parts.elts)[ccv->parts.nelts].data =
     				&ccv->value->data[current_part_start];
     			((ngx_str_t *) ccv->parts.elts)[ccv->parts.nelts].len =
-    				i - current_part_start;
+                    current_part_end - current_part_start;
     			++ccv->parts.nelts;
     			((ngx_uint_t *) ccv->part_types.elts)[ccv->part_types.nelts] =
     				current_part_type;
     			++ccv->part_types.nelts;
     		}
-    		if (i < ccv->value->len) {
+            if (next_part_start > current_part_end) {
     			current_part_type = NGX_CONF_TYPE_EXPR;
     		}
-    		current_part_start = i;
+            current_part_start = next_part_start;
     		
     		break;
     		
     	case NGX_CONF_TYPE_EXPR:
     	
-    		for (i = current_part_start + NGX_CONF_SCRIPT_DELIM_LEN;
-    			i < ccv->value->len - 1; ++i)
-    		{
-    			if (ccv->value->data[i] == '}') {
-    				if (ccv->value->data[i + 1] == '}') {
-    					break;
-    				} else {
-    					ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
-    						"forbidden \"}\" in \"%V\" at character %d",
-    						ccv->value, current_part_start + 1);
-    					goto e_script_parse;
-    				}
-    			} else if (ccv->value->data[i] == '{') {
-    				ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
-    					"forbidden character \"%c\" in \"%V\""
-    					" at character %d",
-    					ccv->value, current_part_start + 1);
-    				goto e_script_parse;
-    			}
-    		}
-    		if (i >= ccv->value->len - 1) {
+            prev_part_end = current_part_end;
+            current_part_end = current_part_start;
+            next_part_start = ngx_conf_to_past_delim(ccv->value,
+                &current_part_end, &ccv->cf->conf_file->script_delim->close);
+            if (next_part_start == current_part_end) {
     			ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
-    			   "unbalanced {{ in \"%V\" at character %d",
-    			   ccv->value, current_part_start + 1);
+                   "unbalanced %V in \"%V\" at character %d",
+                   &ccv->cf->conf_file->script_delim->close, ccv->value,
+                   prev_part_end + 1);
     			goto e_script_parse;
     		}
     		
-    		current_part_start += NGX_CONF_SCRIPT_DELIM_LEN;
     		while (current_part_start < ccv->value->len
     			&& ccv->value->data[current_part_start] == ' ')
     		{
     			++current_part_start;
     		}
-    		for (current_part_end = i;
+            for ( /* void */ ;
     			current_part_end > current_part_start
     				&& ccv->value->data[current_part_end - 1] == ' ';
     			--current_part_end)
@@ -211,7 +238,7 @@ ngx_conf_ccv_compile(ngx_conf_ccv_t *ccv)
     			current_part_type;
     		++ccv->part_types.nelts;
     		
-    		current_part_start = i + NGX_CONF_SCRIPT_DELIM_LEN;
+            current_part_start = next_part_start;
     		current_part_type = NGX_CONF_TYPE_TEXT;
     		
     		break;
