@@ -58,7 +58,7 @@ ngx_conf_scripts(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             return NGX_CONF_ERROR;
         }
 
-        rv = ngx_conf_script_start(cf, &args[0], &args[1]);
+        rv = ngx_conf_script_start(cf, &args[1], &args[2]);
     } else {
         if (args[1].len != 3 || ngx_strncmp(args[1].data, "end", 3) != 0) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
