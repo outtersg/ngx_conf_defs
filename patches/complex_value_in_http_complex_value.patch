@@ -13,7 +13,7 @@ diff -r cac499a2b296 -r ca9d5059523d src/http/ngx_http_script.c
  
      v = ccv->value;
  
-+    if (ccv->compile_defs) {
++    if (!ccv->uninterpreted) {
 +        /* Compile definitions before looking for variables, so that a
 +         * definition's dereference can contain a variable */
 +        if (ngx_conf_complex_value(ccv->cf, v) != NGX_OK) {
@@ -31,7 +31,7 @@ diff -r cac499a2b296 -r ca9d5059523d src/http/ngx_http_script.h
      unsigned                    zero:1;
      unsigned                    conf_prefix:1;
      unsigned                    root_prefix:1;
-+    unsigned                    compile_defs:1;
++    unsigned                    uninterpreted:1;
  } ngx_http_compile_complex_value_t;
  
  
