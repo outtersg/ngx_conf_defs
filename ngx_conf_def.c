@@ -320,6 +320,9 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
     } else {
     	/* TODO: find the value of the last "define" of this context for this
     	 * variable name. */
+        /* TODO: if not found, return the original string (it maybe a string
+         * that coincidentally used our delimiter. Make it parametrizable:
+         * silent, warn, error */
     	ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
     		"not implemented: cannot resolve {{ %V }}", expr);
     	return NGX_ERROR;
