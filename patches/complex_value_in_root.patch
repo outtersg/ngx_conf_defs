@@ -1,0 +1,13 @@
+--- a/src/http/ngx_http_core_module.c	2019-12-13 21:20:05.386440000 +0100
++++ b/src/http/ngx_http_core_module.c	2019-12-13 21:35:31.701220000 +0100
+@@ -4291,6 +4291,10 @@
+         clcf->root.len--;
+     }
+ 
++    if (ngx_conf_complex_value(cf, &clcf->root) != NGX_OK) {
++        return NGX_CONF_ERROR;
++    }
++
+     if (clcf->root.data[0] != '$') {
+         if (ngx_conf_full_name(cf->cycle, &clcf->root, 0) != NGX_OK) {
+             return NGX_CONF_ERROR;
