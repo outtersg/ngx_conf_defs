@@ -81,15 +81,8 @@ ngx_conf_script_start(ngx_conf_t *cf, ngx_str_t *open_delim, ngx_str_t *close_de
     char                     *rv;
     ngx_conf_script_delim_t  *delim;
 
-    if (cf->conf_file->script_delim
-        && cf->conf_file->script_delim->owner != cf->conf_file)
-    {
-        if ((rv = ngx_conf_script_end(cf)) != NGX_CONF_OK) {
-            return rv;
-        }
-    }
-
-    if (!cf->conf_file->script_delim) {
+    if (!cf->conf_file->script_delim
+        || cf->conf_file->script_delim->owner != cf->conf_file) {
         delim = ngx_palloc(cf->temp_pool, sizeof(ngx_conf_script_delim_t));
         if (!delim) {
             return NGX_CONF_ERROR;
