@@ -29,7 +29,7 @@ server
 static apptype php;
 ```
 
-# conf_scripts
+### conf_scripts
 
 Defines the opening and closing marks for config scripts.
 
@@ -46,18 +46,18 @@ Choose wisely to avoid conflicts with your commands' syntax. Calling multiple co
 
 Base syntax chars ({, }, ", ;) can be used, but then they SHALL be quoted in the define, and makes quoting mandatory in commands using them too: thus this is considered a poor decision.
 
-# .
+### .
 
 . is a special config script variable expanded to the current file's full path.
 
-# static _label_ _value_
+### static _label_ _value_
 
 _Not implemented_
 
 Defines the current value for a config script variable.
 Its scope is the current block and its subblocks (until another define occurs).
 
-# define <_label_> _value_
+### define <_label_> _value_
 
 _Not implemented_
 
@@ -77,6 +77,6 @@ include [[toto]].conf;
 ```
 will work as expected.
 
-# Functions
+### Functions
 
 _Not implemented_
