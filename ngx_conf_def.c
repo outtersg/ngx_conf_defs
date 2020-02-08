@@ -135,12 +135,12 @@ ngx_conf_to_past_delim(ngx_str_t *string, ngx_uint_t *pos, ngx_str_t * delim)
             *pos = i;
             for (delim_remaining = delim->len; /* void */ ; /* void */ ) {
                 ++delim_pos;
-                --delim_remaining;
-                if (++i >= string->len) {
-                    break;
-                }
-                if (delim_remaining == 0) {
+                ++i;
+                if (--delim_remaining == 0) {
                     return i;
+                }
+                if (i >= string->len) {
+                    break;
                 }
                 if (string->data[i] != *delim_pos) {
                     break;
