@@ -1,13 +1,36 @@
 diff -ruw a/src/core/ngx_conf_file.h b/src/core/ngx_conf_file.h
 --- a/src/core/ngx_conf_file.h	2020-01-24 01:44:06.056483000 +0100
 +++ b/src/core/ngx_conf_file.h	2020-02-04 22:49:50.638528000 +0100
-@@ -131,6 +131,9 @@
+@@ -131,6 +131,8 @@
  
      ngx_conf_handler_pt   handler;
      void                 *handler_conf;
 +
-+    ngx_uint_t            block_level;
 +    ngx_conf_script_vars_t *vars;
  };
  
  
+--- a/src/core/ngx_cycle.h	2019-09-24 17:08:48.000000000 +0200
++++ b/src/core/ngx_cycle.h	2020-02-18 21:14:56.760402000 +0100
+@@ -11,6 +11,7 @@
+ 
+ #include <ngx_config.h>
+ #include <ngx_core.h>
++#include <ngx_conf_def.h>
+ 
+ 
+ #ifndef NGX_CYCLE_POOL_SIZE
+@@ -75,7 +76,13 @@
+ 
+     ngx_cycle_t              *old_cycle;
+ 
+     ngx_str_t                 conf_file;
++    /* conf_block_level really should be attached to cf, but it is
++     * pushed at block opening (in the containing block) and popped at
++     * block done (in the containee), so any container that saves and
++     * restore cf will increment without noticing the containee-stored
++     * decrement. */
++    ngx_uint_t                conf_block_level;
+     ngx_str_t                 conf_param;
+     ngx_str_t                 conf_prefix;
+     ngx_str_t                 prefix;

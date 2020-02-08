@@ -130,7 +130,7 @@ ngx_cscript_static(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_str_t              *args;
     ngx_conf_script_vars_t *vars;
 
-    if (!cf->vars || cf->vars->block_level < cf->block_level) {
+    if (!cf->vars || cf->vars->block_level < cf->cycle->conf_block_level) {
         vars = ngx_palloc(cf->temp_pool, sizeof(ngx_conf_script_vars_t));
         if (!vars) {
             return NGX_CONF_ERROR;
@@ -141,7 +141,7 @@ ngx_cscript_static(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             ngx_free(vars);
             return NGX_CONF_ERROR;
         }
-        vars->block_level = cf->block_level;
+        vars->block_level = cf->cycle->conf_block_level;
         vars->next = cf->vars;
         cf->vars = vars;
     }
