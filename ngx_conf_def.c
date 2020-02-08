@@ -324,8 +324,16 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
         { /* void */ }
     	return NGX_OK;
     } else {
-    	/* TODO: find the value of the last "define" of this context for this
-    	 * variable name. */
+        ngx_conf_script_vars_t *vars;
+        ngx_str_t              *val;
+        for (vars = ccv->cf->vars; vars; vars = vars->next) {
+            val = ngx_conf_script_var_find(vars, expr);
+            if (val) {
+                expr->data = val->data;
+                expr->len = val->len;
+                return NGX_OK;
+            }
+        }
         /* TODO: if not found, return the original string (it maybe a string
          * that coincidentally used our delimiter. Make it parametrizable:
          * silent, warn, error */
