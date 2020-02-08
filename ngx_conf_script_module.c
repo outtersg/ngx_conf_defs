@@ -141,6 +141,7 @@ ngx_cscript_static(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             ngx_free(vars);
             return NGX_CONF_ERROR;
         }
+        vars->block_level = cf->block_level;
         vars->next = cf->vars;
         cf->vars = vars;
     }
