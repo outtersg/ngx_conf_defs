@@ -31,6 +31,9 @@ patchcore()
 	p="block_level"
 	patches="$patches $p"
 	
+	p="ngx_conf_script_block_start_and_done"
+	patches="$patches $p"
+	
 	for p in $patches
 	do
 		patch -p1 < "$ngx_addon_dir/patches/$p.patch" || exit 1

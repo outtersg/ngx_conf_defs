@@ -1,0 +1,20 @@
+--- a/src/core/ngx_conf_file.c	2020-02-08 17:00:11.173780000 +0100
++++ b/src/core/ngx_conf_file.c	2020-02-08 19:27:40.171537000 +0100
+@@ -263,6 +263,8 @@
+ 
+         if (rc == NGX_CONF_BLOCK_DONE) {
+ 
++            ngx_conf_script_block_done(cf);
++
+             if (type != parse_block) {
+                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "unexpected \"}\"");
+                 goto failed;
+@@ -283,6 +285,8 @@
+         }
+ 
+         if (rc == NGX_CONF_BLOCK_START) {
++            
++            ngx_conf_script_block_start(cf);
+ 
+             if (type == parse_param) {
+                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
