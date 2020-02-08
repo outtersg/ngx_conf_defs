@@ -30,6 +30,11 @@ int ngx_conf_ccv_init(ngx_conf_ccv_t *ccv, ngx_conf_t *cf, ngx_str_t *value,
 int ngx_conf_ccv_run(ngx_conf_ccv_t *ccv);
 int ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
 void ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv);
+ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
+    ngx_str_t *name);
+ngx_int_t ngx_conf_script_var_pos(ngx_conf_script_vars_t *vars,
+    ngx_str_t *name);
+#define ngx_array_get(type, a, pos) (*(type *)&(a)->elts[pos])
 
 
 int
@@ -328,4 +333,74 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
     		"not implemented: cannot resolve {{ %V }}", expr);
     	return NGX_ERROR;
     }
+}
+
+
+int
+ngx_conf_script_var_set(ngx_conf_script_vars_t *vars, ngx_str_t *name,
+    ngx_str_t *val)
+{
+    ngx_int_t              pos;
+    ngx_conf_script_var_t *var;
+    pos = ngx_conf_script_var_pos(vars, name);
+    if (pos < 0) {
+        pos = -1 - pos;
+        var = (ngx_conf_script_var_t *)ngx_array_push(&vars->vars);
+        if (!var) {
+            return NGX_ERROR;
+        }
+        if (pos < vars->vars.nelts - 1) {
+            var = &ngx_array_get(ngx_conf_script_var_t, &vars->vars, pos);
+            ngx_memcpy(
+                var,
+                &var[1],
+                (vars->vars.nelts - 1 - pos) * sizeof(ngx_conf_script_var_t));
+        }
+    } else {
+        var = &ngx_array_get(ngx_conf_script_var_t, &vars->vars, pos);
+    }
+    var->name.data = name->data;
+    var->name.len = name->len;
+    var->val.data = val->data;
+    var->val.len = val->len;
+
+    return NGX_OK;
+}
+
+
+ngx_str_t *
+ngx_conf_script_var_find(ngx_conf_script_vars_t *vars, ngx_str_t *name)
+{
+    ngx_int_t pos;
+    pos = ngx_conf_script_var_pos(vars, name);
+    return pos >= 0 ? &(ngx_array_get(ngx_conf_script_var_t, &vars->vars, pos).val) : NULL;
+}
+
+
+ngx_int_t
+ngx_conf_script_var_pos(ngx_conf_script_vars_t *vars, ngx_str_t *name)
+{
+    /* As conf_script vars are not expected to be numerous, we do a
+     * simple dichotomy instead of a full hash. */
+    ngx_int_t start, middle, end;
+    ngx_str_t * comp;
+    ngx_int_t str_comp_res, length_comp_res;
+    for (start = 0, end = vars->vars.nelts; end > start;) {
+        middle = (start + end) / 2;
+        comp = &(ngx_array_get(ngx_conf_script_var_t, &vars->vars, middle).name);
+        length_comp_res = name->len - comp->len;
+        str_comp_res = ngx_strncmp(name->data, comp->data, length_comp_res >= 0 ? name->len : comp->len);
+        if (str_comp_res == 0) {
+            if (length_comp_res == 0) {
+                return middle;
+            }
+            str_comp_res += length_comp_res;
+        }
+        if (str_comp_res < 0) {
+            start = middle + 1;
+        } else {
+            end = middle;
+        }
+    }
+    return -1 - start;
 }

@@ -32,6 +32,8 @@ typedef struct ngx_conf_script_vars {
 } ngx_conf_script_vars_t;
 
 
+int ngx_conf_script_var_set(ngx_conf_script_vars_t *vars,
+    ngx_str_t *name, ngx_str_t *val);
 int ngx_conf_complex_value(ngx_conf_t *cf, ngx_str_t *string);
 
 
