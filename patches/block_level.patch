@@ -1,0 +1,13 @@
+diff -ruw a/src/core/ngx_conf_file.h b/src/core/ngx_conf_file.h
+--- a/src/core/ngx_conf_file.h	2020-01-24 01:44:06.056483000 +0100
++++ b/src/core/ngx_conf_file.h	2020-02-04 22:49:50.638528000 +0100
+@@ -131,6 +131,9 @@
+ 
+     ngx_conf_handler_pt   handler;
+     void                 *handler_conf;
++
++    ngx_uint_t            block_level;
++    ngx_conf_script_vars_t *vars;
+ };
+ 
+ 

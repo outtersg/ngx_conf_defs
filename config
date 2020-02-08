@@ -25,6 +25,9 @@ patchcore()
 	p="delim_init"
 	patches="$patches $p"
 	
+	p="block_level"
+	patches="$patches $p"
+	
 	for p in $patches
 	do
 		patch -p1 < "$ngx_addon_dir/patches/$p.patch" || exit 1
