@@ -52,9 +52,9 @@ Base syntax chars ({, }, ", ;) can be used, but then they SHALL be quoted in the
 
 ### static _label_ _value_
 
-_Not implemented_
-
 Defines the current value for a config script variable.
+
+_Not implemented_:
 Its scope is the current block and its subblocks (until another define occurs).
 
 ### define <_label_> _value_
