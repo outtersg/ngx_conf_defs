@@ -1,0 +1,14 @@
+diff -ruw a/src/core/ngx_conf_file.c b/src/core/ngx_conf_file.c
+--- a/src/core/ngx_conf_file.c	2020-02-08 08:13:02.502809000 +0100
++++ b/src/core/ngx_conf_file.c	2020-02-08 12:09:44.405003000 +0100
+@@ -1136,6 +1136,10 @@
+ 
+     value = cf->args->elts;
+ 
++    if (ngx_conf_complex_value(cf, &value[1]) != NGX_OK) {
++        return NGX_CONF_ERROR;
++    }
++
+     *field = value[1];
+ 
+     if (cmd->post) {
