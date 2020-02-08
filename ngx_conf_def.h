@@ -36,5 +36,8 @@ int ngx_conf_script_var_set(ngx_conf_script_vars_t *vars,
     ngx_str_t *name, ngx_str_t *val);
 int ngx_conf_complex_value(ngx_conf_t *cf, ngx_str_t *string);
 
+void ngx_conf_script_block_start(ngx_conf_t *cf);
+void ngx_conf_script_block_done(ngx_conf_t *cf);
+
 
 #endif /* _NGX_CONF_DEF_H_INCLUDED_ */

@@ -412,3 +412,26 @@ ngx_conf_script_var_pos(ngx_conf_script_vars_t *vars, ngx_str_t *name)
     }
     return -1 - start;
 }
+
+
+void
+ngx_conf_script_block_start(ngx_conf_t *cf)
+{
+    ++cf->cycle->conf_block_level;
+}
+
+
+void
+ngx_conf_script_block_done(ngx_conf_t *cf)
+{
+    ngx_conf_script_vars_t *vars;
+
+    --cf->cycle->conf_block_level;
+    while (cf->vars && cf->vars->block_level > cf->cycle->conf_block_level) {
+        vars = cf->vars;
+        cf->vars = cf->vars->next;
+        /* Do not clean array_destroy(&vars->vars) nor free(vars).
+         * Having been allocated on the cf's temp pool, they may have
+         * been reused now. */
+    }
+}
