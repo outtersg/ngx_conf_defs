@@ -12,6 +12,8 @@ char *ngx_conf_scripts(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 char *ngx_conf_script_start(ngx_conf_t *cf, ngx_str_t *open_delim,
     ngx_str_t *close_delim);
 char *ngx_conf_script_end(ngx_conf_t *cf);
+char *ngx_cscript_static(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
 
 
 static ngx_command_t  ngx_conf_script_commands[] = {
@@ -19,6 +21,13 @@ static ngx_command_t  ngx_conf_script_commands[] = {
     { ngx_string("conf_scripts"),
       NGX_ANY_CONF|NGX_CONF_TAKE1|NGX_CONF_TAKE2,
       ngx_conf_scripts,
+      0,
+      0,
+      NULL },
+
+    { ngx_string("static"),
+      NGX_ANY_CONF|NGX_CONF_TAKE2,
+      ngx_cscript_static,
       0,
       0,
       NULL },
@@ -109,6 +118,45 @@ ngx_conf_script_end(ngx_conf_t *cf)
 
     ngx_free(cf->conf_file->script_delim);
     cf->conf_file->script_delim = NULL;
+
+    return NGX_CONF_OK;
+}
+
+
+char *
+ngx_cscript_static(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    char                   *rv;
+    ngx_str_t              *args;
+    ngx_conf_script_vars_t *vars;
+
+    if (!cf->vars || cf->vars->block_level < cf->block_level) {
+        vars = ngx_palloc(cf->temp_pool, sizeof(ngx_conf_script_vars_t));
+        if (!vars) {
+            return NGX_CONF_ERROR;
+        }
+        /* By putting our temp string in a temp pool, better use the
+         * result as soon as read or copy it to a more protected store. */
+        if(ngx_array_init(&vars->vars, cf->temp_pool, 4, sizeof(ngx_conf_script_var_t)) != NGX_OK) {
+            ngx_free(vars);
+            return NGX_CONF_ERROR;
+        }
+        vars->next = cf->vars;
+        cf->vars = vars;
+    }
+
+    args = cf->args->elts;
+
+    if (ngx_conf_complex_value(cf, &args[2]) != NGX_OK) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (ngx_conf_script_var_set(vars, &args[1], &args[2])
+        != NGX_OK) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            "could not set var %s", args[1].data);
+        return NGX_CONF_ERROR;
+    }
 
     return NGX_CONF_OK;
 }
