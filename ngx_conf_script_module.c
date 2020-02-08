@@ -151,7 +151,7 @@ ngx_cscript_static(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_conf_script_var_set(vars, &args[1], &args[2])
+    if (ngx_conf_script_var_set(cf->vars, &args[1], &args[2])
         != NGX_OK) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
             "could not set var %s", args[1].data);
