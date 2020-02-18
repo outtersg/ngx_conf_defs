@@ -397,7 +397,7 @@ ngx_conf_script_var_pos(ngx_conf_script_vars_t *vars, ngx_str_t *name)
         middle = (start + end) / 2;
         comp = &(ngx_array_get(ngx_conf_script_var_t, &vars->vars, middle).name);
         length_comp_res = name->len - comp->len;
-        str_comp_res = ngx_strncmp(name->data, comp->data, length_comp_res >= 0 ? name->len : comp->len);
+        str_comp_res = ngx_strncmp(name->data, comp->data, length_comp_res >= 0 ? comp->len : name->len);
         if (str_comp_res == 0) {
             if (length_comp_res == 0) {
                 return middle;
