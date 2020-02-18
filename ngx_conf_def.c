@@ -34,7 +34,7 @@ ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
     ngx_str_t *name);
 ngx_int_t ngx_conf_script_var_pos(ngx_conf_script_vars_t *vars,
     ngx_str_t *name);
-#define ngx_array_get(type, a, pos) (*(type *)&(a)->elts[pos])
+#define ngx_array_get(type, a, pos) (((type *)(a)->elts)[pos])
 
 
 int
