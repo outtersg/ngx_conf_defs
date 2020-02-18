@@ -360,8 +360,8 @@ ngx_conf_script_var_set(ngx_conf_script_vars_t *vars, ngx_str_t *name,
         if (pos < vars->vars.nelts - 1) {
             var = &ngx_array_get(ngx_conf_script_var_t, &vars->vars, pos);
             ngx_memcpy(
-                var,
                 &var[1],
+                var,
                 (vars->vars.nelts - 1 - pos) * sizeof(ngx_conf_script_var_t));
         }
     } else {
