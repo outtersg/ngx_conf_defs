@@ -28,6 +28,9 @@ patchcore()
 	p="complex_value_in_root"
 	patches="$patches $p"
 	
+	p="complex_value_in_server_name"
+	patches="$patches $p"
+	
 	p="delim_init"
 	patches="$patches $p"
 	

@@ -1,0 +1,20 @@
+--- a/src/http/ngx_http_core_module.c	2020-03-10 00:40:04.796637000 +0100
++++ b/src/http/ngx_http_core_module.c	2020-03-10 00:43:48.143067000 +0100
+@@ -8,6 +8,7 @@
+ #include <ngx_config.h>
+ #include <ngx_core.h>
+ #include <ngx_http.h>
++#include <ngx_conf_def.h>
+ 
+ 
+ typedef struct {
+@@ -4137,6 +4138,9 @@
+ 
+     for (i = 1; i < cf->args->nelts; i++) {
+ 
++        if (ngx_conf_complex_value(cf, &value[i]) != NGX_OK) {
++            return NGX_CONF_ERROR;
++        }
+         ch = value[i].data[0];
+ 
+         if ((ch == '*' && (value[i].len < 3 || value[i].data[1] != '.'))
