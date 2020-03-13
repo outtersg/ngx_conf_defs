@@ -1,0 +1,13 @@
+--- a/src/core/ngx_conf_file.c	2020-02-08 08:13:02.502809000 +0100
++++ b/src/core/ngx_conf_file.c	2020-03-13 20:50:39.362171000 +0100
+@@ -1180,6 +1180,10 @@
+ 
+     value = cf->args->elts;
+ 
++    if (ngx_conf_complex_value(cf, &value[1]) != NGX_OK) {
++        return NGX_CONF_ERROR;
++    }
++
+     *s = value[1];
+ 
+     if (cmd->post) {

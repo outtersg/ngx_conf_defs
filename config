@@ -22,6 +22,9 @@ patchcore()
 	p="complex_value_in_set_str_slot"
 	patches="$patches $p"
 	
+	p="complex_value_in_set_str_array_slot"
+	patches="$patches $p"
+	
 	p="complex_value_in_root"
 	patches="$patches $p"
 	
