@@ -29,6 +29,7 @@ int ngx_conf_ccv_init(ngx_conf_ccv_t *ccv, ngx_conf_t *cf, ngx_str_t *value,
     ngx_uint_t n);
 int ngx_conf_ccv_run(ngx_conf_ccv_t *ccv);
 int ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
+int ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
 void ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv);
 ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
     ngx_str_t *name);
@@ -314,6 +315,13 @@ ngx_conf_ccv_run(ngx_conf_ccv_t *ccv)
 
 int
 ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
+{
+    return ngx_conf_ccv_resolve_var(ccv, expr);
+}
+
+
+int
+ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
 {
     if (expr->len == 1 && ngx_strncmp(expr->data, ".", 1) == 0) {
     	expr->len = ccv->cf->conf_file->file.name.len;
