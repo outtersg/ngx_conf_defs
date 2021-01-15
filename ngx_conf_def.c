@@ -429,7 +429,8 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
     {
         /* Parenthesis are immediately reduced */
         if (tokens[pos].type == T_PAR) {
-            pos2 = ngx_conf_ccv_order_tokens(tokens, pos + 1, end, ')');
+            if ((pos2 = ngx_conf_ccv_order_tokens(tokens, pos + 1, end, ')')) < 0)
+                return pos2;
             if (pos2 >= end || tokens[pos2].type != ')') {
                 /* @todo diagno. */
                 fprintf(stderr, "# Missing closing parenthesis\n");
@@ -495,11 +496,13 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
 
     /* operators */
     if (pos_max < end - 1)
-        pos2 = ngx_conf_ccv_order_tokens(tokens, pos_max + 1, end, closer);
+        if ((pos2 = ngx_conf_ccv_order_tokens(tokens, pos_max + 1, end, closer)) < 0)
+            return pos2;
     else
         pos2 = end;
     if (pos_max > start)
-        pos = ngx_conf_ccv_order_tokens(tokens, start, pos_max, T_END);
+        if ((pos = ngx_conf_ccv_order_tokens(tokens, start, pos_max, T_END)) < 0)
+            return pos;
     /* @todo Ensure an operator has always exactly one operand at left and one at right. */
     tokens[pos_max].n_ops = pos2 - start;
     /* polish notation */
