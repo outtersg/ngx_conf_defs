@@ -409,8 +409,9 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
     pos = ngx_conf_ccv_order_tokens(ccv, tokens, 0, end, T_END);
     if (pos < end) {
         if (pos >= 0)
-    	ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
-    		"cannot resolve {{ %V }}: unexpected token at position %d", expr, tokens[pos].text.data - expr->data);
+            ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
+                "cannot resolve {{ %V }}: unexpected token at position %d",
+                expr, tokens[pos].text.data - expr->data);
     	return NGX_ERROR;
     }
 
