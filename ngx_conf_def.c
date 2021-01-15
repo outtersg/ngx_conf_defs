@@ -362,6 +362,19 @@ ngx_conf_ccv_run(ngx_conf_ccv_t *ccv)
 }
 
 
+void
+ngx_conf_ccv_print_tokens(ngx_conf_ccv_token_t *tokens, int start, int end)
+{
+    int pos;
+    for (--start; ++start < end;) {
+        if(!tokens[start].type) continue;
+        fprintf(stderr, "  [%c] %d->%d:\t", tokens[start].type, start, tokens[start].n_ops ? tokens[start].n_ops + start - 1 : 0);
+        fwrite(tokens[start].text.data, 1, tokens[start].text.len, stderr);
+        fprintf(stderr, "\n");
+    }
+}
+
+
 int
 ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
 {
