@@ -442,6 +442,7 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
                 tokens[pos].type = T_FUNC;
                 tokens[pos].n_ops = pos2 - pos;
                 tokens[pos + 1].type = 0;
+                ngx_conf_ccv_tokens_to_list(tokens, pos + 2, pos2 - 1);
             } else {
                 tokens[pos].type = T_ARPAR;
                 tokens[pos].n_ops = pos2 - pos;
@@ -509,6 +510,33 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
     }
 
     return pos2;
+}
+
+
+int
+ngx_conf_ccv_tokens_to_list(ngx_conf_ccv_token_t *tokens, int start,
+    int end)
+{
+    int pos;
+    u_char comma_next = 1;
+
+    for (pos = start; pos < end; /* void */ ) {
+        if (!tokens[pos].type)
+            continue;
+        if (comma_next) {
+            if (tokens[pos].type != ',') {
+                return -1;
+            }
+            tokens[pos].type = 0;
+            ++pos;
+        } else {
+            /* having a left-side of , then skipping to right-side */
+            pos += tokens[pos].n_ops;
+        }
+        comma_next ^= 1;
+    }
+
+    return 0;
 }
 
 
