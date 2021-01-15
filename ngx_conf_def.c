@@ -360,6 +360,57 @@ ngx_conf_ccv_run(ngx_conf_ccv_t *ccv)
 int
 ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
 {
+    ngx_int_t pos, end;
+    ngx_uint_t *lengths = (ngx_uint_t *)alloca(expr->len * sizeof(ngx_uint_t));
+    ngx_conf_ccv_token_t *tokens;
+
+    /* get token lengths */
+    for (pos = -1; ++pos < expr->len;) {
+        switch (charclass[expr->data[pos]]) {
+            case T_ALPHA:
+            case T_NUM:
+                for (end = pos;
+                    ++end < expr->len
+                    && (charclass[expr->data[end]] == T_ALPHA || charclass[expr->data[end]] == T_NUM);
+                    /* void */ ) {
+                    lengths[end] = 0;
+                }
+                lengths[pos] = end - pos;
+                pos = end - 1;
+                break;
+            case 0:
+                lengths[pos] = 0;
+                break;
+            default:
+                lengths[pos] = 1;
+                break;
+        }
+    }
+
+    /* get tokens */
+    for (end = 0, pos = -1; ++pos < expr->len;) {
+        if (lengths[pos])
+            ++end;
+    }
+    tokens = (ngx_conf_ccv_token_t *)alloca(end * sizeof(ngx_conf_ccv_token_t));
+    for (end = 0, pos = -1; ++pos < expr->len;) {
+        if (lengths[pos]) {
+            tokens[end].type = charclass[expr->data[pos]];
+            tokens[end].n_ops = 0;
+            tokens[end].text.data = &expr->data[pos];
+            tokens[end].text.len = lengths[pos];
+            ++end;
+        }
+    }
+
+    /* reorder tokens in polish notation */
+    pos = ngx_conf_ccv_order_tokens(tokens, 0, end, T_END);
+    if (pos < end) {
+    	ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
+    		"cannot resolve {{ %V }}: unexpected token at position %d", expr, tokens[pos].text.data - expr->data);
+    	return NGX_ERROR;
+    }
+
     return ngx_conf_ccv_resolve_var(ccv, expr);
 }
 
