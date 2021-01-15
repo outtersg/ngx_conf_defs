@@ -50,6 +50,7 @@ int ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
 int ngx_conf_ccv_tokens_to_list(ngx_conf_ccv_token_t *tokens, int start,
     int end);
 int ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
+int ngx_conf_ccv_resolve_func(ngx_conf_ccv_t *ccv, int argc, ngx_str_t *argv);
 void ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv);
 ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
     ngx_str_t *name);
@@ -578,6 +579,23 @@ ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
     }
 }
 
+
+int
+ngx_conf_ccv_resolve_func(ngx_conf_ccv_t *ccv, int argc, ngx_str_t *argv)
+{
+    int i;
+
+    for (i = -1; ngx_conf_script_functions[++i].func; /* void */ ) {
+        if (ngx_strcmp(&ngx_conf_script_functions[i].name, &argv[0]) == 0) {
+            argv[0] = ngx_conf_script_functions[i].func(argc - 1, &argv[1]);
+            return argv[0].data ? NGX_OK : NGX_ERROR;
+        }
+    }
+
+    ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
+        "no config script function named %V()", &argv[0]);
+    return NGX_ERROR;
+}
 
 int
 ngx_conf_script_var_set(ngx_conf_script_vars_t *vars, ngx_str_t *name,
