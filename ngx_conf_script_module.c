@@ -38,7 +38,7 @@ static ngx_command_t  ngx_conf_script_commands[] = {
 
 static ngx_core_module_t  ngx_conf_script_ctx = {
     ngx_string("conf_script"),
-    NULL,
+    ngx_conf_script_init,
     NULL
 };
 

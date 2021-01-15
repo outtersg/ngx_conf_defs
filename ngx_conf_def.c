@@ -24,6 +24,16 @@ typedef struct {
     ngx_array_t       part_types;
 } ngx_conf_ccv_t;
 
+#define T_END   '$'
+#define T_ALPHA 'A'
+#define T_NUM   '0'
+#define T_FUNC  'f'
+#define T_VAR   'v'
+/* Parenthesis for arithmetic priority, e.g. 3 * ( 1 + 2 ) */
+#define T_ARPAR 'p'
+/* Undetermined parenthesis, before knowing if for a function's parameters, or in arithmetic */
+#define T_PAR '('
+
 int ngx_conf_ccv_compile(ngx_conf_ccv_t *ccv);
 int ngx_conf_ccv_init(ngx_conf_ccv_t *ccv, ngx_conf_t *cf, ngx_str_t *value,
     ngx_uint_t n);
@@ -36,6 +46,32 @@ ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
 ngx_int_t ngx_conf_script_var_pos(ngx_conf_script_vars_t *vars,
     ngx_str_t *name);
 #define ngx_array_get(type, a, pos) (((type *)(a)->elts)[pos])
+
+
+static u_char charclass[256];
+
+
+void *
+ngx_conf_script_init(ngx_cycle_t *cycle)
+{
+    int pos;
+    for (pos = 256; --pos > ' ';) {
+        charclass[pos] = T_ALPHA;
+    }
+    while(--pos >= 0) {
+        charclass[pos] = 0;
+    }
+
+    for (pos = '0'; pos <= '9'; ++pos) {
+        charclass[pos] = T_NUM;
+    }
+
+    charclass['('] = T_PAR;
+    charclass[')'] = ')';
+    charclass[','] = ',';
+
+    return charclass;
+}
 
 
 int
