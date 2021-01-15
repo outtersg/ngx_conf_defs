@@ -34,11 +34,19 @@ typedef struct {
 /* Undetermined parenthesis, before knowing if for a function's parameters, or in arithmetic */
 #define T_PAR '('
 
+typedef struct {
+    u_char type;
+    int n_ops;
+    ngx_str_t text;
+} ngx_conf_ccv_token_t;
+
 int ngx_conf_ccv_compile(ngx_conf_ccv_t *ccv);
 int ngx_conf_ccv_init(ngx_conf_ccv_t *ccv, ngx_conf_t *cf, ngx_str_t *value,
     ngx_uint_t n);
 int ngx_conf_ccv_run(ngx_conf_ccv_t *ccv);
 int ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
+int ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
+    int end, u_char closer);
 int ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
 void ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv);
 ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
@@ -353,6 +361,103 @@ int
 ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
 {
     return ngx_conf_ccv_resolve_var(ccv, expr);
+}
+
+
+int
+ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
+    int end, u_char closer)
+{
+    int pos, pos2, prio;
+    int pos_max, prio_max;
+    ngx_conf_ccv_token_t token;
+
+    for (pos = start, pos_max = -1, prio_max = -1;
+            pos < end && tokens[pos].type != closer;
+            /* void */ )
+    {
+        /* Parenthesis are immediately reduced */
+        if (tokens[pos].type == T_PAR) {
+            pos2 = ngx_conf_ccv_order_tokens(tokens, pos + 1, end, ')');
+            if (pos2 >= end || tokens[pos2].type != ')') {
+                /* @todo diagno. */
+                fprintf(stderr, "# Missing closing parenthesis\n");
+                return -1;
+            }
+            tokens[pos2].type = 0;
+            ++pos2;
+            if (pos > start && tokens[pos - 1].type == T_ALPHA) {
+                --pos;
+                tokens[pos].type = T_FUNC;
+                tokens[pos].n_ops = pos2 - pos;
+                tokens[pos + 1].type = 0;
+            } else {
+                tokens[pos].type = T_ARPAR;
+                tokens[pos].n_ops = pos2 - pos;
+            }
+            /* pos does not increment, so our modified block will get reevaluated */
+            continue;
+        }
+        switch (tokens[pos].type) {
+            case 0:
+                /* Erased tokens are kept in place to avoid renumbering
+                 * all other tokens; just ignore it. */
+                continue;
+            case ')':
+                /* @todo Error. We should have been detected as == closer */
+                fprintf(stderr, "# ) without (\n");
+                return -1;
+            case ',':
+                prio = 10;
+                break;
+            default:
+                prio = 0;
+                break;
+        }
+        if (prio > prio_max) {
+            prio_max = prio;
+            pos_max = pos;
+        }
+
+        pos += tokens[pos].n_ops ? tokens[pos].n_ops : 1;
+    }
+
+    if (pos < end) {
+        end = pos;
+    } else {
+        closer = 0;
+    }
+
+    /* empty contents */
+    if (prio_max < 0) {
+        return pos;
+    }
+
+    if (prio_max == 0) {
+        if (tokens[pos_max].type == T_ALPHA)
+            tokens[pos_max].type = T_VAR;
+        if (!tokens[pos_max].n_ops)
+            tokens[pos_max].n_ops = 1;
+        return pos_max + tokens[pos_max].n_ops;
+    }
+
+    /* operators */
+    if (pos_max < end - 1)
+        pos2 = ngx_conf_ccv_order_tokens(tokens, pos_max + 1, end, closer);
+    else
+        pos2 = end;
+    if (pos_max > start)
+        pos = ngx_conf_ccv_order_tokens(tokens, start, pos_max, T_END);
+    /* @todo Ensure an operator has always exactly one operand at left and one at right. */
+    tokens[pos_max].n_ops = pos2 - start;
+    /* polish notation */
+    if (pos_max > start) {
+        token = tokens[pos_max];
+        memmove(&tokens[start + 1], &tokens[start], (pos_max - start) * sizeof(ngx_conf_ccv_token_t));
+        tokens[start] = token;
+    }
+
+    return pos2;
 }
 
 
