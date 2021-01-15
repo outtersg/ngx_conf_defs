@@ -418,7 +418,7 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
     	return NGX_ERROR;
     }
 
-    return ngx_conf_ccv_resolve_var(ccv, expr);
+    return ngx_conf_ccv_resolve_tokens(ccv, tokens, end, expr);
 }
 
 
