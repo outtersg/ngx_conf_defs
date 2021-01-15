@@ -41,5 +41,12 @@ int ngx_conf_complex_value(ngx_conf_t *cf, ngx_str_t *string);
 void ngx_conf_script_block_start(ngx_conf_t *cf);
 void ngx_conf_script_block_done(ngx_conf_t *cf);
 
+typedef struct {
+    ngx_str_t             name;
+    ngx_uint_t            type;
+    ngx_str_t             (*func)(int nargs, ngx_str_t *args);
+} ngx_conf_script_func_t;
+extern ngx_conf_script_func_t *ngx_conf_script_functions;
+
 
 #endif /* _NGX_CONF_DEF_H_INCLUDED_ */
