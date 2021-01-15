@@ -432,8 +432,8 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
             if ((pos2 = ngx_conf_ccv_order_tokens(ccv, tokens, pos + 1, end, ')')) < 0)
                 return pos2;
             if (pos2 >= end || tokens[pos2].type != ')') {
-                /* @todo diagno. */
-                fprintf(stderr, "# Missing closing parenthesis\n");
+                ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
+                    "missing closing parenthesis");
                 return -1;
             }
             tokens[pos2].type = 0;
@@ -457,8 +457,8 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
                  * all other tokens; just ignore it. */
                 continue;
             case ')':
-                /* @todo Error. We should have been detected as == closer */
-                fprintf(stderr, "# ) without (\n");
+                ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
+                    ") without (");
                 return -1;
             case ',':
                 prio = 10;
