@@ -45,8 +45,8 @@ int ngx_conf_ccv_init(ngx_conf_ccv_t *ccv, ngx_conf_t *cf, ngx_str_t *value,
     ngx_uint_t n);
 int ngx_conf_ccv_run(ngx_conf_ccv_t *ccv);
 int ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
-int ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
-    int end, u_char closer);
+int ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
+    ngx_conf_ccv_token_t *tokens, int start, int end, u_char closer);
 int ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
 void ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv);
 ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
@@ -404,7 +404,7 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
     }
 
     /* reorder tokens in polish notation */
-    pos = ngx_conf_ccv_order_tokens(tokens, 0, end, T_END);
+    pos = ngx_conf_ccv_order_tokens(ccv, tokens, 0, end, T_END);
     if (pos < end) {
     	ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
     		"cannot resolve {{ %V }}: unexpected token at position %d", expr, tokens[pos].text.data - expr->data);
@@ -416,8 +416,8 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
 
 
 int
-ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
-    int end, u_char closer)
+ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
+    ngx_conf_ccv_token_t *tokens, int start, int end, u_char closer)
 {
     int pos, pos2, prio;
     int pos_max, prio_max;
@@ -429,7 +429,7 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
     {
         /* Parenthesis are immediately reduced */
         if (tokens[pos].type == T_PAR) {
-            if ((pos2 = ngx_conf_ccv_order_tokens(tokens, pos + 1, end, ')')) < 0)
+            if ((pos2 = ngx_conf_ccv_order_tokens(ccv, tokens, pos + 1, end, ')')) < 0)
                 return pos2;
             if (pos2 >= end || tokens[pos2].type != ')') {
                 /* @todo diagno. */
@@ -496,12 +496,12 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_token_t *tokens, int start,
 
     /* operators */
     if (pos_max < end - 1)
-        if ((pos2 = ngx_conf_ccv_order_tokens(tokens, pos_max + 1, end, closer)) < 0)
+        if ((pos2 = ngx_conf_ccv_order_tokens(ccv, tokens, pos_max + 1, end, closer)) < 0)
             return pos2;
     else
         pos2 = end;
     if (pos_max > start)
-        if ((pos = ngx_conf_ccv_order_tokens(tokens, start, pos_max, T_END)) < 0)
+        if ((pos = ngx_conf_ccv_order_tokens(ccv, tokens, start, pos_max, T_END)) < 0)
             return pos;
     /* @todo Ensure an operator has always exactly one operand at left and one at right. */
     tokens[pos_max].n_ops = pos2 - start;
