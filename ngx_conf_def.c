@@ -47,6 +47,8 @@ int ngx_conf_ccv_run(ngx_conf_ccv_t *ccv);
 int ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
 int ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
     ngx_conf_ccv_token_t *tokens, int start, int end, u_char closer);
+int ngx_conf_ccv_tokens_to_list(ngx_conf_ccv_token_t *tokens, int start,
+    int end);
 int ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
 void ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv);
 ngx_str_t *ngx_conf_script_var_find(ngx_conf_script_vars_t *vars,
