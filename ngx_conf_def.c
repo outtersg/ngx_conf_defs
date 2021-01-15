@@ -49,6 +49,8 @@ int ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
     ngx_conf_ccv_token_t *tokens, int start, int end, u_char closer);
 int ngx_conf_ccv_tokens_to_list(ngx_conf_ccv_token_t *tokens, int start,
     int end);
+int ngx_conf_ccv_resolve_tokens(ngx_conf_ccv_t *ccv,
+    ngx_conf_ccv_token_t *tokens, int n_tokens, ngx_str_t *expr);
 int ngx_conf_ccv_resolve_var(ngx_conf_ccv_t *ccv, ngx_str_t *expr);
 int ngx_conf_ccv_resolve_func(ngx_conf_ccv_t *ccv, int argc, ngx_str_t *argv);
 void ngx_conf_ccv_destroy(ngx_conf_ccv_t *ccv);
@@ -545,6 +547,58 @@ ngx_conf_ccv_tokens_to_list(ngx_conf_ccv_token_t *tokens, int start,
     }
 
     return 0;
+}
+
+
+int
+ngx_conf_ccv_resolve_tokens(ngx_conf_ccv_t *ccv,
+    ngx_conf_ccv_token_t *tokens, int n_tokens, ngx_str_t *expr)
+{
+    ngx_str_t *res = (ngx_str_t *)alloca(n_tokens * sizeof(ngx_str_t));
+    int *from = (int *)alloca(n_tokens * sizeof(int));
+    int *to = (int *)alloca(n_tokens * sizeof(int));
+    int posr, post, end;
+    int r;
+
+    for (post = posr = n_tokens; --post >= 0; /* void */ ) {
+        if (!tokens[post].type)
+            continue;
+        --posr;
+        from[posr] = post;
+        to[posr] = post + tokens[post].n_ops - 1;
+        switch (tokens[post].type) {
+            case T_VAR:
+                res[posr] = tokens[post].text;
+                if ((r = ngx_conf_ccv_resolve_var(ccv, &res[posr])) == NGX_ERROR)
+                    return r;
+                break;
+            case T_FUNC:
+                /* args are everything whose end is included in the function's end */
+                for (end = posr; ++end < n_tokens && to[end] <= to[posr]; /* void */)
+                { /* void */ }
+                res[posr] = tokens[post].text;
+                if ((r = ngx_conf_ccv_resolve_func(ccv, end - posr, &res[posr])) == NGX_ERROR)
+                    return r;
+                if (--end > posr) {
+                    res[end] = res[posr];
+                    posr = end;
+                }
+                break;
+            case 0:
+                break;
+            default:
+                ngx_conf_log_error(NGX_LOG_EMERG, ccv->cf, 0,
+                    "unexpected token of type %c in {{ %V }}", tokens[post].type, expr);
+                return NGX_ERROR;
+        }
+    }
+
+    /* @todo? return tail instead of head, in case of a multi-string
+     * return, e.g. in << A = <complex compute>, A == "0" ? "" : A >>
+     * we want the final evaluation */
+    *expr = res[posr];
+
+    return NGX_OK;
 }
 
 
