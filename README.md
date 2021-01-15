@@ -77,4 +77,8 @@ will work as expected.
 
 ### Functions
 
-_Not implemented_
+#### Path handling
+
+##### dirname(path)
+
+##### basename(path)
