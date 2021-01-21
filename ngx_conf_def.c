@@ -521,11 +521,12 @@ ngx_conf_ccv_order_tokens(ngx_conf_ccv_t *ccv,
     }
 
     /* operators */
-    if (pos_max < end - 1)
+    if (pos_max < end - 1) {
         if ((pos2 = ngx_conf_ccv_order_tokens(ccv, tokens, pos_max + 1, end, closer)) < 0)
             return pos2;
-    else
+    } else {
         pos2 = end;
+    }
     if (pos_max > start)
         if ((pos = ngx_conf_ccv_order_tokens(ccv, tokens, start, pos_max, T_END)) < 0)
             return pos;
