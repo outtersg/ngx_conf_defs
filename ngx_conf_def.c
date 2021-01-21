@@ -62,6 +62,7 @@ ngx_int_t ngx_conf_script_var_pos(ngx_conf_script_vars_t *vars,
 
 
 static u_char charclass[256];
+static u_char *charclass_p = NULL;
 
 
 void *
@@ -381,6 +382,11 @@ ngx_conf_ccv_resolve_expr(ngx_conf_ccv_t *ccv, ngx_str_t *expr)
     ngx_int_t pos, end;
     ngx_uint_t *lengths = (ngx_uint_t *)alloca(expr->len * sizeof(ngx_uint_t));
     ngx_conf_ccv_token_t *tokens;
+
+    if (!charclass_p) {
+        ngx_conf_script_init(NULL);
+        charclass_p = charclass;
+    }
 
     /* get token lengths */
     for (pos = -1; ++pos < expr->len;) {
